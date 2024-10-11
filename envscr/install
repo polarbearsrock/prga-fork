@@ -4,9 +4,9 @@
 # -- Choose your desired compiler --------------------------------------------
 # ============================================================================
 COMP=gcc
-MAKE_JOBCOUNT=8
-PYTHON_VERSION=3.8.2
-PYENV_VERSION=v2.0.0-rc1
+MAKE_JOBCOUNT=1
+#PYTHON_VERSION=3.8.2  # 我們現在不需要這個，因為 Dockerfile 已經指定 Python 版本
+#PYENV_VERSION=v2.0.0-rc1
 
 # ============================================================================
 # -- Do not modify below this line -------------------------------------------
@@ -65,38 +65,7 @@ if [ -z "${CC}" ]; then
 fi
 info "Using '${COMP}': ${CC}"
 
-# find or install pyenv
-if command -v pyenv 2>&1 >/dev/null; then
-    info "Active 'pyenv' found. Skipping installation/activation of 'pyenv'"
-else
-    if [ ! -f pyenv/bin/pyenv ]; then
-        info "'pyenv' not found. Installing 'pyenv' locally to ${PWD}/pyenv"
-        ${GIT} clone https://github.com/pyenv/pyenv.git || exit 1
-        cd pyenv && ${GIT} fetch && ${GIT} checkout ${PYENV_VERSION} && cd ..
-        info "'pyenv' installed locally to ${PWD}/pyenv"
-    else
-        info "Locally-installed 'pyenv' found. Updating 'pyenv'"
-        cd pyenv && ${GIT} fetch && ${GIT} checkout ${PYENV_VERSION} && cd ..
-        info "'pyenv' updated"
-    fi
-
-    info "Activating locally-installed 'pyenv'"
-    export PYENV_ROOT=${PWD}/pyenv
-    export PATH=${PYENV_ROOT}/bin:$PATH
-    eval "$( pyenv init --path )"
-    eval "$( pyenv init - )"
-    info "'pyenv' activated"
-fi
-
-# install the desired python if it's not installed already
-info "Installing Python ${PYTHON_VERSION} with 'pyenv'"
-env PYTHON_CONFIGURE_OPTS="--enable-shared" CFLAGS="-fPIC" CXXFLAGS="-fPIC" pyenv install -s ${PYTHON_VERSION} || exit 1
-info "Python ${PYTHON_VERSION} installed with 'pyenv'"
-pyenv local ${PYTHON_VERSION} || exit 1
-if [[ $( python --version | cut -d " " -f 2 ) != "${PYTHON_VERSION}" ]]; then
-    err "'pyenv' is not choosing the correct Python version" && exit 1
-fi
-info "Python ${PYTHON_VERSION} chosen as the local version"
+# 跳過 pyenv 部分，因為我們使用 Docker 中的 Python
 
 # upgrade pip and setuptools
 info "Upgrading 'pip' and 'setuptools'"
@@ -128,7 +97,7 @@ info "VTR built successfully"
 info "Building Yosys"
 cd yosys
 make || exit 1
-sudo make install || exit 1
+make install || exit 1
 cd ..
 info "Yosys built successfully"
 
@@ -145,9 +114,7 @@ info "'vpr' and 'genfasm' linked to ${PWD}/local/bin"
 # build a virtualenv for prga.py
 cd prga.py
 info "Creating a virtualenv for prga.py"
-PIPENV_VENV_IN_PROJECT=1 pipenv --python ${PYTHON_VERSION} install -e .[cocotb] || exit 1
+PIPENV_VENV_IN_PROJECT=1 pipenv install -e .[cocotb] || exit 1
 cd ..
 info "Virtualenv setup completed for prga.py"
 info "Installation finished successfully"
-
-# vim: set ft=sh:
