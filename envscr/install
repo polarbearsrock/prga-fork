@@ -5,7 +5,7 @@
 # ============================================================================
 COMP=gcc
 MAKE_JOBCOUNT=1
-#PYTHON_VERSION=3.8.2  # 我們現在不需要這個，因為 Dockerfile 已經指定 Python 版本
+#PYTHON_VERSION=3.8.2  # 
 #PYENV_VERSION=v2.0.0-rc1
 
 # ============================================================================
@@ -65,7 +65,7 @@ if [ -z "${CC}" ]; then
 fi
 info "Using '${COMP}': ${CC}"
 
-# 跳過 pyenv 部分，因為我們使用 Docker 中的 Python
+
 
 # upgrade pip and setuptools
 info "Upgrading 'pip' and 'setuptools'"
